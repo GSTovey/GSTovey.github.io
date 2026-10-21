@@ -4,22 +4,23 @@ import { renderPage } from '../../src/render.mjs';
 import { site } from '../../src/data/site.mjs';
 import { existsSync } from 'node:fs';
 
-for (const width of [1440, 1024, 768, 390, 320]) {
-  test(`responsive page and accessible content at ${width}px`, async ({ page }) => {
+for (const locale of ['en', 'zh']) for (const width of [1440, 1024, 768, 390, 320]) {
+  test(`${locale}: responsive page and accessible content at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 960 });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Hi, I’m Tovey.' })).toBeVisible();
-    await expect(page.locator('.publication-card')).toHaveCount(1);
+    await page.goto(locale === 'zh' ? '/zh/' : '/');
+    await expect(page.locator('h1')).toHaveText(locale === 'zh' ? '你好，我是 Tovey。' : 'Hi, I’m Tovey.');
+    await expect(page.locator('.publication-card')).toHaveCount(3);
     await expect(page.locator('.project-card')).toHaveCount(2);
     await expect(page.locator('.resource-card')).toHaveCount(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(result.violations).toEqual([]);
     expect(errors).toEqual([]);
-    await page.screenshot({ path: `test-results/portfolio-${width}.png`, fullPage: true });
+    expect(await page.locator('.publication-summary').first().evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
+    await page.screenshot({ path: `test-results/portfolio-${locale}-${width}.png`, fullPage: true });
   });
 }
 
@@ -31,7 +32,7 @@ test('all same-page links resolve and production assets are served', async ({ pa
   await page.goto('/');
   const hashes = await page.locator('a[href^="#"]').evaluateAll((links) => links.map((link) => link.hash));
   for (const hash of hashes) await expect(page.locator(hash)).toHaveCount(1);
-  for (const path of ['/assets/favicon.svg', '/assets/social-card.png', '/robots.txt', '/sitemap.xml']) expect((await request.get(path)).ok()).toBe(true);
+  for (const path of ['/zh/', '/assets/fonts/manrope-latin-variable.woff2', '/assets/favicon.svg', '/assets/social-card.png', '/robots.txt', '/sitemap.xml']) expect((await request.get(path)).ok()).toBe(true);
   expect((await request.get('/missing-resource.png')).status()).toBe(404);
   expect(failedLocal).toEqual([]);
 });
@@ -100,9 +101,67 @@ test('content and small-screen navigation remain usable with JavaScript disabled
   const page = await context.newPage();
   await page.goto('/');
   await expect(page.getByRole('navigation')).toBeVisible();
-  await expect(page.locator('.publication-card')).toBeVisible();
-  await expect(page.locator('.cite-button')).toBeHidden();
+  await expect(page.locator('.publication-card').first()).toBeVisible();
+  await expect(page.locator('.cite-button').first()).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await context.close();
+});
+
+test('language switch preserves section, restores explicit preference, and can return to English', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/#publications');
+  await page.getByRole('link', { name: '切换到中文' }).click();
+  await expect(page).toHaveURL(/\/zh\/#publications$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
+  await expect(page.getByRole('navigation')).toHaveAccessibleName('主导航');
+  await expect(page.locator('.publication-card')).toHaveCount(3);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/zh\/$/);
+  await page.getByRole('link', { name: 'Switch to English' }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  expect(await page.evaluate(() => localStorage.getItem('portfolio-language'))).toBe('en');
+});
+
+test('Chinese menu, citation, copy feedback and accessible labels are translated', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/zh/');
+  await page.getByRole('button', { name: '展开导航' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: '论文', exact: true }).click();
+  await expect(page.getByRole('button', { name: '展开导航' })).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('button', { name: /^引用 R3S/ }).click();
+  const dialog = page.getByRole('dialog', { name: '引用这项研究' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: '复制 BibTeX' }).click();
+  await expect(dialog.getByRole('status')).toHaveText('已复制 BibTeX。');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('10.1109/TIFS.2026.3725546');
+  await dialog.getByRole('button', { name: '关闭引用' }).click();
+  await expect(dialog).not.toBeVisible();
+});
+
+test('language link works when localStorage is unavailable', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(window, 'localStorage', { get() { throw new Error('Storage unavailable'); } }));
+  await page.goto('/');
+  await page.getByRole('link', { name: '切换到中文' }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
+  await page.getByRole('link', { name: 'Switch to English' }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});
+
+test('Chinese content and language link work without JavaScript; local font loads', async ({ browser, page }) => {
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  expect(await page.evaluate(() => [...document.fonts].some((face) => face.family === 'Manrope' && face.status === 'loaded'))).toBe(true);
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+  const plain = await context.newPage();
+  await plain.goto('/zh/');
+  await expect(plain.locator('h1')).toHaveText('你好，我是 Tovey。');
+  await expect(plain.locator('.publication-card')).toHaveCount(3);
+  await plain.getByRole('link', { name: 'Switch to English' }).click();
+  await expect(plain.locator('html')).toHaveAttribute('lang', 'en');
   await context.close();
 });
 

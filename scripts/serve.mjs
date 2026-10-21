@@ -16,7 +16,7 @@ const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    const file = path.resolve(output, `.${pathname === '/' ? '/index.html' : pathname}`);
+    const file = path.resolve(output, `.${pathname.endsWith('/') ? `${pathname}index.html` : pathname}`);
     if (!file.startsWith(`${output}${path.sep}`)) { response.writeHead(403); response.end('Forbidden'); return; }
     const data = await readFile(file);
     response.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });

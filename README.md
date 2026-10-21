@@ -1,6 +1,6 @@
 # Purple Academic Portfolio
 
-Tovey 的个人学术主页，目标地址为 **https://gstovey.github.io/**。
+Tovey 的个人学术主页，英文地址 **https://gstovey.github.io/**，中文地址 **https://gstovey.github.io/zh/**。顶部语言按钮可切换，保留当前章节并记住明确选择；禁用 JavaScript 时仍可通过真实链接切换和阅读两种语言。
 
 白色背景、紫色识别色与克制的卡片布局。第一版包含个人介绍、研究兴趣、论文、研究项目、开源知识库、联系区域和页脚。未核实的履历与新闻自动隐藏。
 
@@ -30,10 +30,14 @@ npm run test:e2e # Chromium：五种视口、菜单、引用、资源和可访�
 | `src/render.mjs` | 静态 HTML 组件与元信息 |
 | `public/assets/styles.css` | 主题 Token、组件与响应式样式 |
 | `docs/content-sources.md` | 内容来源与核实边界 |
+| `src/i18n.mjs` | 界面双语词条与本地化辅助函数 |
+| `AGENTS.md`、`docs/MAINTENANCE.md` | 其他智能体的维护约定与可复制任务说明 |
 
 页面无需 JavaScript 也能阅读内容和使用导航；JavaScript 只增强移动菜单、当前章节提示、头像回退和 BibTeX 引用弹窗。外链仅接受 HTTPS，无效或缺失的可选链接不会生成按钮。论文无链接时以普通标题显示。不要添加占位 URL、未经证实的状态或私人资料。
 
-主色从 `#935BED` 出发；白底上的文字及按钮使用对比度更高的 `#6F3FC5`。正文颜色 `#302642`，次级文字 `#716B7C`，辅助表面 `#FAF7FF`。所有主题色集中在 CSS `:root` 中。字体使用本机无衬线回退，不请求在线字体。
+主色从 `#935BED` 出发；白底上的文字及按钮使用对比度更高的 `#6F3FC5`。正文颜色 `#302642`，次级文字 `#716B7C`，辅助表面 `#FAF7FF`。所有主题色集中在 CSS `:root` 中。英文采用本地托管的 Manrope 可变字体（约 25 KB，SIL OFL），中文回退至苹方、思源黑体、微软雅黑等系统无衬线字体，不请求第三方字体服务。正文与论文简介调整为 16–18px。
+
+双语内容在每条数据的 `translations.zh` 中维护；论文保留正式英文标题、作者与引用，简介和主题标签提供中文。构建生成 `dist/index.html` 与 `dist/zh/index.html`，并输出各自的 canonical、hreflang 与页面语言信息。如何交给其他智能体修改见 [维护指南](docs/MAINTENANCE.md)。
 
 ### 头像
 

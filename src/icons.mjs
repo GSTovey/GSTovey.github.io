@@ -1,5 +1,6 @@
 // A small local subset of Lucide (ISC). See THIRD_PARTY_NOTICES.md.
 const paths = {
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a17 17 0 0 1 0 20 17 17 0 0 1 0-20Z"/>',
   arrow: '<path d="M7 17 17 7M7 7h10v10"/>',
   right: '<path d="M5 12h14m-6-6 6 6-6 6"/>',
   up: '<path d="m6 12 6-6 6 6M12 6v14"/>',

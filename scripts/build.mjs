@@ -18,15 +18,18 @@ export async function build() {
     }
   }
   const resolvedSite = { ...site, avatar };
-  const html = renderPage({ site: resolvedSite, interests, publications, projects, openSource, news, experience });
+  const content = { site: resolvedSite, interests, publications, projects, openSource, news, experience };
+  const html = renderPage(content);
   await rm(output, { recursive: true, force: true });
   await mkdir(output, { recursive: true });
+  await mkdir(path.join(output, 'zh'), { recursive: true });
   await cp(path.join(root, 'public'), output, { recursive: true });
   await Promise.all([
     writeFile(path.join(output, 'index.html'), html),
+    writeFile(path.join(output, 'zh/index.html'), renderPage(content, { locale: 'zh' })),
     writeFile(path.join(output, '.nojekyll'), ''),
     writeFile(path.join(output, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${site.url}sitemap.xml\n`),
-    writeFile(path.join(output, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${site.url}</loc></url></urlset>\n`),
+    writeFile(path.join(output, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${site.url}</loc></url><url><loc>${site.url}zh/</loc></url></urlset>\n`),
     writeFile(path.join(output, '404.html'), '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Page not found — Tovey</title><link rel="stylesheet" href="/assets/styles.css"><main class="container section"><p class="eyebrow">404</p><h1>Page not found.</h1><p>This page may have moved.</p><p><a class="button button-primary" href="/">Return to the homepage</a></p></main></html>'),
   ]);
   console.log(`Built static portfolio → ${output}`);

@@ -6,6 +6,7 @@ import { site, interests } from '../src/data/site.mjs';
 import { publications } from '../src/data/publications.mjs';
 import { projects, openSource } from '../src/data/projects.mjs';
 import { news, experience } from '../src/data/updates.mjs';
+import { getMessages, localizeContent } from '../src/i18n.mjs';
 
 const content = { site, interests, publications, projects, openSource, news, experience };
 test('all navigation anchors resolve to unique, rendered sections', () => {
@@ -60,4 +61,41 @@ test('GitHub Pages workflow deploys the built root-domain site', async () => {
   assert.ok(workflow.includes('actions/deploy-pages@v4'));
   assert.ok(workflow.includes('pages: write'));
   assert.ok(workflow.includes('id-token: write'));
+});
+
+test('Chinese output translates content, controls and SEO while preserving original citations', () => {
+  const html = renderPage(content, { locale: 'zh' });
+  assert.ok(html.includes('<html lang="zh-Hans">'));
+  for (const phrase of ['网络安全研究', '研究方向', '聚焦研究问题。', '四川大学', '关闭引用', '复制 BibTeX', '展开导航', '返回顶部']) assert.ok(html.includes(phrase), phrase);
+  assert.ok(html.includes('rel="canonical" href="https://gstovey.github.io/zh/"'));
+  assert.ok(html.includes('hreflang="en"'));
+  assert.ok(html.includes('hreflang="zh-Hans"'));
+  for (const p of publications) {
+    assert.ok(html.includes(escapeHtml(p.title)));
+    assert.ok(html.includes(p.authors.map(escapeHtml).join(', ')));
+  }
+  assert.deepEqual(Object.keys(getMessages('en')), Object.keys(getMessages('zh')));
+});
+
+test('owner-provided papers and ORCID keep exact identifiers and author order', () => {
+  assert.equal(publications.length, 3);
+  const r3s = publications.find((p) => p.id === 'r3s-2026');
+  assert.deepEqual(r3s.authors, ['Z. Li', 'C. Huang', 'J. Peng', 'X. Tian', 'C. Zhou', 'P. Cheng']);
+  assert.ok(r3s.paperUrl.endsWith('10.1109/TIFS.2026.3725546'));
+  const apt = publications.find((p) => p.id === 'aptbert-2024');
+  assert.equal(apt.year, 2024);
+  assert.ok(apt.venue.includes('ICDF2C 2023'));
+  assert.deepEqual(apt.authors, ['C. Zhou', 'C. Huang', 'Y. Wang', 'Z. Zuo']);
+  assert.equal(site.orcid, 'https://orcid.org/0000-0002-5871-946X');
+  assert.ok(renderPage(content).includes(`href="${site.orcid}"`));
+});
+
+test('localization falls back for optional translations without mutating shared data', () => {
+  const before = JSON.stringify(content);
+  const zh = localizeContent(content, 'zh');
+  assert.equal(zh.site.name, site.name);
+  assert.equal(zh.publications[0].title, publications[0].title);
+  assert.notEqual(zh.publications[0].summary, publications[0].summary);
+  renderPage({ site, publications: [{ title: 'Original title only' }, null, {}] }, { locale: 'zh' });
+  assert.equal(JSON.stringify(content), before);
 });

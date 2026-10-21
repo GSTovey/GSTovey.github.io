@@ -1,5 +1,7 @@
 # Third-party assets
 
+Manrope is locally hosted from `@fontsource-variable/manrope` 5.3.0 (Latin variable WOFF2, approximately 25 KB), under the SIL Open Font License 1.1. The complete original copyright and license are preserved in `public/assets/fonts/Manrope-OFL.txt`. Source: https://fontsource.org/fonts/manrope and https://github.com/sharanda/manrope .
+
 The small local line-icon set in `src/icons.mjs` is adapted from [Lucide](https://lucide.dev/), licensed under the ISC License:
 
 Copyright (c) for portions of Lucide are held by Cole Bemis 2013–2022 (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.

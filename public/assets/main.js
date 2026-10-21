@@ -1,19 +1,31 @@
 document.documentElement.classList.add('js');
+const ui = JSON.parse(document.getElementById('ui-messages')?.textContent || '{}');
+
+const languageSwitch = document.querySelector('[data-language-switch]');
+if (languageSwitch) {
+  const updateLanguageHash = () => { languageSwitch.hash = location.hash; };
+  updateLanguageHash();
+  window.addEventListener('hashchange', updateLanguageHash);
+  languageSwitch.addEventListener('click', () => {
+    try { localStorage.setItem('portfolio-language', languageSwitch.dataset.locale); } catch { /* Real links work without storage. */ }
+  });
+}
 
 const toggle = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#navigation');
 function closeMenu(restoreFocus = false) {
   if (!toggle || !navigation) return;
   toggle.setAttribute('aria-expanded', 'false');
-  toggle.setAttribute('aria-label', 'Open navigation');
+  toggle.setAttribute('aria-label', ui.openNavigation);
   navigation.classList.remove('is-open');
   if (restoreFocus) toggle.focus();
 }
 toggle?.addEventListener('click', () => {
   const expanded = toggle.getAttribute('aria-expanded') !== 'true';
   toggle.setAttribute('aria-expanded', String(expanded));
-  toggle.setAttribute('aria-label', expanded ? 'Close navigation' : 'Open navigation');
+  toggle.setAttribute('aria-label', expanded ? ui.closeNavigation : ui.openNavigation);
   navigation.classList.toggle('is-open', expanded);
+  if (expanded) navigation.querySelector('a')?.focus();
 });
 navigation?.addEventListener('click', (event) => {
   const link = event.target.closest('a');
@@ -68,7 +80,7 @@ for (const avatar of document.querySelectorAll('img[data-fallback]')) {
     } else {
       avatar.hidden = true;
       avatar.parentElement.setAttribute('role', 'img');
-      avatar.parentElement.setAttribute('aria-label', 'Profile image unavailable');
+      avatar.parentElement.setAttribute('aria-label', ui.avatarUnavailable);
     }
   };
   avatar.addEventListener('error', fallback);
@@ -93,9 +105,9 @@ for (const button of document.querySelectorAll('[data-citation]')) {
     const status = dialog.querySelector('.copy-status');
     try {
       await navigator.clipboard.writeText(dialog.querySelector('code').textContent);
-      status.textContent = 'BibTeX copied.';
+      status.textContent = ui.copySuccess;
     } catch {
-      status.textContent = 'Select and copy the citation above.';
+      status.textContent = ui.copyFailure;
       dialog.querySelector('pre').focus();
     }
   });
