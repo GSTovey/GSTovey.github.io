@@ -1,0 +1,21 @@
+{
+  "name": "purple-academic-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tovey's lightweight academic portfolio",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "dev": "node scripts/serve.mjs --dev",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs",
+    "avatar:fetch": "node scripts/fetch-avatar.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "check": "npm test && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.1",
+    "@playwright/test": "1.58.2"
+  }
+}
