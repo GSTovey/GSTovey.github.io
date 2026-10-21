@@ -6,6 +6,7 @@ import { site, interests } from '../src/data/site.mjs';
 import { publications } from '../src/data/publications.mjs';
 import { projects, openSource } from '../src/data/projects.mjs';
 import { news, experience } from '../src/data/updates.mjs';
+import { education } from '../src/data/education.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 export const output = path.join(root, 'dist');
@@ -18,7 +19,7 @@ export async function build() {
     }
   }
   const resolvedSite = { ...site, avatar };
-  const content = { site: resolvedSite, interests, publications, projects, openSource, news, experience };
+  const content = { site: resolvedSite, interests, publications, projects, education, openSource, news, experience };
   const html = renderPage(content);
   await rm(output, { recursive: true, force: true });
   await mkdir(output, { recursive: true });

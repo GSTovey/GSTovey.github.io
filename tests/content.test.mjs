@@ -7,8 +7,9 @@ import { publications } from '../src/data/publications.mjs';
 import { projects, openSource } from '../src/data/projects.mjs';
 import { news, experience } from '../src/data/updates.mjs';
 import { getMessages, localizeContent } from '../src/i18n.mjs';
+import { education } from '../src/data/education.mjs';
 
-const content = { site, interests, publications, projects, openSource, news, experience };
+const content = { site, interests, publications, projects, education, openSource, news, experience };
 test('all navigation anchors resolve to unique, rendered sections', () => {
   const html = renderPage(content);
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
@@ -19,7 +20,7 @@ test('all navigation anchors resolve to unique, rendered sections', () => {
 });
 test('empty collections and missing optional data do not produce empty sections or links', () => {
   const html = renderPage({ site: { ...site, email: undefined, avatar: undefined }, publications: [], projects: [], openSource: [], interests: [], news: [], experience: [] });
-  for (const id of ['publications', 'projects', 'open-source', 'research', 'news', 'experience']) {
+  for (const id of ['publications', 'projects', 'education', 'open-source', 'research', 'news', 'experience']) {
     assert.ok(!html.includes(`id="${id}"`), id);
     assert.ok(!html.includes(`href="#${id}"`), id);
   }
@@ -28,6 +29,7 @@ test('empty collections and missing optional data do not produce empty sections 
   assert.ok(minimal.includes('A long title without optional metadata'));
   assert.ok(minimal.includes('Minimal project'));
   assert.ok(!minimal.includes('data-citation='));
+  assert.ok(!minimal.includes('data-copy-citation='));
   assert.ok(!minimal.includes('>Demo<'));
 });
 test('untrusted text is escaped and unsafe external links are omitted', () => {
@@ -98,4 +100,49 @@ test('localization falls back for optional translations without mutating shared 
   assert.notEqual(zh.publications[0].summary, publications[0].summary);
   renderPage({ site, publications: [{ title: 'Original title only' }, null, {}] }, { locale: 'zh' });
   assert.equal(JSON.stringify(content), before);
+});
+
+test('Education preserves four separate study periods, schools and stages in both languages', () => {
+  assert.deepEqual(education.map((entry) => [entry.start, entry.end]), [
+    ['2019.09', '2020.06'], ['2020.09', '2024.06'], ['2024.09', '2026.06'], ['2026.09', null],
+  ]);
+  const zh = localizeContent(content, 'zh').education;
+  assert.deepEqual(zh.map((entry) => entry.school), ['轻工科学与工程学院', '网络空间安全学院', '网络空间安全学院', '网络空间安全学院']);
+  assert.deepEqual(zh.map((entry) => entry.stage), ['本科阶段', '本科阶段', '硕士阶段', '博士阶段']);
+  assert.ok(education.every((entry) => entry.institution === 'Sichuan University'));
+  assert.deepEqual(education.filter((entry) => entry.current).map((entry) => entry.start), ['2026.09']);
+  for (const locale of ['en', 'zh']) {
+    const html = renderPage(content, { locale });
+    assert.equal((html.match(/class="education-item/g) || []).length, 4);
+    assert.ok(html.indexOf('id="projects"') < html.indexOf('id="education"'));
+    assert.ok(html.indexOf('id="education"') < html.indexOf('id="open-source"'));
+    assert.ok(html.includes('href="#education"'));
+    assert.ok(html.includes('datetime="2019-09"'));
+    assert.ok(html.includes(locale === 'zh' ? '至今' : 'Present'));
+  }
+});
+
+test('card copy controls reuse one citation source and disappear when data is missing', () => {
+  const html = renderPage(content);
+  assert.equal((html.match(/data-copy-citation=/g) || []).length, publications.length);
+  for (const [index, paper] of publications.entries()) {
+    assert.ok(html.includes(`data-copy-citation="${index}"`));
+    assert.equal(html.split(escapeHtml(paper.bibtex)).length - 1, 1);
+  }
+  const incomplete = renderPage({ site, education: [{ institution: 'Unverified', school: 'Missing dates' }], publications: [{ title: 'No citation' }] });
+  assert.ok(!incomplete.includes('id="education"'));
+  assert.ok(!incomplete.includes('data-copy-citation='));
+});
+
+test('Contact stays open to general discussion and the progress decoration is hidden from assistive technology', () => {
+  for (const locale of ['en', 'zh']) {
+    const localized = localizeContent(content, locale);
+    assert.ok(!localized.site.contactText.includes('NESTTOR'));
+    const html = renderPage(content, { locale });
+    assert.ok(html.includes('class="scroll-progress" aria-hidden="true"'));
+    assert.ok(html.includes('class="profile-traces"'));
+    assert.ok(html.includes(`mailto:${site.email}`));
+    assert.ok(html.includes(site.orcid));
+    assert.ok(html.includes(locale === 'zh' ? '欢迎交流' : 'Let’s Connect'));
+  }
 });

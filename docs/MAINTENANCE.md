@@ -20,6 +20,7 @@
 | 新增论文、作者、出处、DOI、BibTeX | `src/data/publications.mjs` |
 | 项目与开源资源 | `src/data/projects.mjs` |
 | 动态和履历 | `src/data/updates.mjs` |
+| Education 四段学习经历 | `src/data/education.mjs` |
 | 中英文导航、标题、按钮、提示、无障碍标签 | `src/i18n.mjs` |
 | 字体、字号、颜色、间距与响应式布局 | `public/assets/styles.css` |
 | 页面组件及 SEO | `src/render.mjs` |

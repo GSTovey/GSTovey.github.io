@@ -19,7 +19,7 @@ export const site = {
   repositories: 'https://github.com/GSTovey?tab=repositories',
   email: 'tovey_zhou@foxmail.com',
   orcid: 'https://orcid.org/0000-0002-5871-946X',
-  contactText: 'For research discussions, questions about NESTTOR, or dataset access, feel free to get in touch.',
+  contactText: 'I’m always happy to connect with researchers, developers, and anyone interested in exchanging ideas, discussing research or technology, exploring collaborations, or simply having a conversation.',
   translations: {
     zh: {
       title: 'Tovey — 网络安全研究',
@@ -29,7 +29,7 @@ export const site = {
       institution: '四川大学',
       headline: '理解加密流量中可观测的网络行为。',
       bio: '我目前在四川大学网络空间安全学院 iTA-Lab 攻读博士，主要关注网络安全、加密流量分析与网络流量分类，也开展网络威胁情报与安全知识图谱相关研究。',
-      contactText: '欢迎就相关研究、NESTTOR 或数据访问事宜通过邮件交流。',
+      contactText: '欢迎就学术研究、技术讨论、项目合作、开源工作或其他感兴趣的话题与我交流。无论是分享想法、探讨问题，还是建立新的联系，都欢迎通过以下方式联系我。',
     },
   },
 };

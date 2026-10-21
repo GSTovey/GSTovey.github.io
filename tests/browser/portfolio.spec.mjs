@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { renderPage } from '../../src/render.mjs';
 import { site } from '../../src/data/site.mjs';
+import { education } from '../../src/data/education.mjs';
+import { publications } from '../../src/data/publications.mjs';
+import { getMessages } from '../../src/i18n.mjs';
 import { existsSync } from 'node:fs';
 
 for (const locale of ['en', 'zh']) for (const width of [1440, 1024, 768, 390, 320]) {
@@ -15,6 +18,9 @@ for (const locale of ['en', 'zh']) for (const width of [1440, 1024, 768, 390, 32
     await expect(page.locator('.publication-card')).toHaveCount(3);
     await expect(page.locator('.project-card')).toHaveCount(2);
     await expect(page.locator('.resource-card')).toHaveCount(1);
+    await expect(page.locator('.education-item')).toHaveCount(4);
+    await expect(page.locator('.copy-bibtex-button')).toHaveCount(3);
+    await expect(page.locator('.profile-traces')).toHaveAttribute('aria-hidden', 'true');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(result.violations).toEqual([]);
@@ -103,6 +109,8 @@ test('content and small-screen navigation remain usable with JavaScript disabled
   await expect(page.getByRole('navigation')).toBeVisible();
   await expect(page.locator('.publication-card').first()).toBeVisible();
   await expect(page.locator('.cite-button').first()).toBeHidden();
+  await expect(page.locator('.copy-bibtex-button').first()).toBeHidden();
+  await expect(page.locator('.scroll-progress')).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await context.close();
 });
@@ -201,4 +209,118 @@ test('locally downloaded avatar is decoded as a real image', async ({ page }) =>
   await expect(page.locator('.avatar')).toBeVisible();
   await expect.poll(() => page.locator('.avatar').evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
   expect(await page.locator('.avatar').getAttribute('src')).toBe(`/assets/${localAvatar}`);
+});
+
+for (const locale of ['en', 'zh']) {
+  const ui = getMessages(locale);
+  const path = locale === 'zh' ? '/zh/' : '/';
+  test(`${locale}: Education is reachable on mobile and keeps its section across language changes`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(path);
+    await page.getByRole('button', { name: ui.openNavigation }).click();
+    await page.getByRole('navigation').getByRole('link', { name: ui.education, exact: true }).click();
+    await expect(page).toHaveURL(/#education$/);
+    await expect(page.locator('#education')).toBeFocused();
+    expect((await page.locator('#education').boundingBox()).y).toBeGreaterThanOrEqual(68);
+    const periods = page.locator('.education-period');
+    for (const [index, item] of education.entries()) await expect(periods.nth(index)).toHaveText(`${item.start}–${item.end || ui.present}`);
+    await page.getByRole('link', { name: ui.switchLabel }).click();
+    await expect(page).toHaveURL(/#education$/);
+    await expect(page.locator('.education-item')).toHaveCount(4);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale === 'zh' ? 'en' : 'zh-Hans');
+  });
+
+  test(`${locale}: each card copies its own complete BibTeX and restores button feedback`, async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(path);
+    for (const [index, paper] of publications.entries()) {
+      const button = page.locator(`[data-copy-citation="${index}"]`);
+      await button.click();
+      await expect(button.locator('[data-copy-label]')).toHaveText(ui.copied);
+      await expect(page.locator('.publication-card').nth(index).getByRole('status')).toHaveText(ui.copySuccess);
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(paper.bibtex);
+      await expect(page.locator('dialog[open]')).toHaveCount(0);
+    }
+    await expect(page.locator('[data-copy-citation="2"] [data-copy-label]')).toHaveText(ui.copyBibtex);
+  });
+
+  test(`${locale}: denied clipboard shows failure and a selectable manual citation`, async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new DOMException('Permission denied', 'NotAllowedError'); } } }));
+    await page.goto(path);
+    const button = page.locator('[data-copy-citation="1"]');
+    await button.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(button.locator('[data-copy-label]')).toHaveText(ui.copyFailed);
+    await expect(dialog.getByRole('status')).toHaveText(ui.copyFailure);
+    await expect(dialog.locator('pre')).toBeFocused();
+    expect(await page.evaluate(() => getSelection().toString())).toBe(publications[1].bibtex);
+    await expect(dialog.locator('code')).toHaveText(publications[1].bibtex);
+    await expect(page.locator('.publication-card').nth(1).getByRole('status')).not.toHaveText(ui.copySuccess);
+  });
+}
+
+test('missing Clipboard API retains a manual-copy route for the correct paper', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: undefined }));
+  await page.goto('/');
+  await page.locator('[data-copy-citation="2"]').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('status')).toHaveText(getMessages().copyFailure);
+  expect(await page.evaluate(() => getSelection().toString())).toBe(publications[2].bibtex);
+});
+
+for (const width of [1440, 390]) {
+  test(`scroll progress tracks top, middle, bottom, upward scrolling and resize at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    const measure = () => page.locator('.scroll-progress > span').evaluate((node) => node.getBoundingClientRect().width / innerWidth);
+    const actualRatio = () => page.evaluate(() => scrollY / (document.documentElement.scrollHeight - document.documentElement.clientHeight));
+    await expect.poll(measure).toBeCloseTo(0, 3);
+    await page.evaluate(() => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) / 2));
+    await expect.poll(measure).toBeCloseTo(await actualRatio(), 2);
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(measure).toBeCloseTo(1, 3);
+    await page.evaluate(() => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) / 4));
+    await expect.poll(measure).toBeCloseTo(await actualRatio(), 2);
+    await page.setViewportSize({ width, height: 700 });
+    await expect.poll(measure).toBeCloseTo(await actualRatio(), 2);
+    await expect(page.locator('.scroll-progress')).toHaveAttribute('aria-hidden', 'true');
+    expect((await page.locator('.scroll-progress').boundingBox()).height).toBe(3);
+    expect(await page.locator('.scroll-progress').evaluate((node) => getComputedStyle(node).pointerEvents)).toBe('none');
+  });
+}
+
+test('progress remains finite and zero when content does not fill the viewport', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await page.evaluate(() => { document.querySelector('main').hidden = true; document.querySelector('footer').hidden = true; });
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight)).toBe(0);
+  await expect.poll(() => page.locator('.scroll-progress > span').evaluate((node) => node.getBoundingClientRect().width)).toBe(0);
+  expect(await page.locator('.scroll-progress > span').getAttribute('style')).not.toMatch(/NaN|Infinity/);
+  expect(errors).toEqual([]);
+});
+
+test('static card bodies stay still, real links give feedback, and keyboard focus respects reduced motion', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const card = page.locator('.project-card').first();
+  await card.locator('h3').hover();
+  expect(await card.evaluate((node) => getComputedStyle(node).transform)).toBe('none');
+  const link = card.locator('.card-actions a').first();
+  await link.hover();
+  await expect.poll(() => card.evaluate((node) => getComputedStyle(node).borderTopColor)).toBe('rgb(147, 91, 237)');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const arrowLink = page.locator('.publication-content h3 a').first();
+  await arrowLink.hover();
+  expect(await arrowLink.locator('.external-arrow').evaluate((node) => getComputedStyle(node).transform)).toBe('none');
+  await page.locator('[data-citation="0"]').focus();
+  await page.keyboard.press('Tab');
+  const copy = page.locator('[data-copy-citation="0"]');
+  await expect(copy).toBeFocused();
+  expect(await copy.evaluate((node) => getComputedStyle(node).outlineWidth)).toBe('3px');
 });

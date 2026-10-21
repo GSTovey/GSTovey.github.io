@@ -51,10 +51,14 @@ matchMedia('(min-width: 901px)').addEventListener('change', () => closeMenu());
 // the document bottom explicitly so Contact can still become current.
 const links = [...(navigation?.querySelectorAll('a') || [])];
 const sections = links.map((link) => document.getElementById(link.hash.slice(1))).filter(Boolean);
+const scrollProgress = document.querySelector('.scroll-progress > span');
 let activeFramePending = false;
 function updateActiveSection() {
+  const scrollDistance = Math.max(0, document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  const progress = scrollDistance > 0 ? Math.min(1, Math.max(0, scrollY / scrollDistance)) : 0;
+  if (scrollProgress) scrollProgress.style.transform = `scaleX(${progress})`;
   const threshold = document.querySelector('.site-header').offsetHeight + 120;
-  const atBottom = Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight - 2;
+  const atBottom = scrollDistance > 0 && Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight - 2;
   const current = atBottom ? sections.at(-1) : sections.findLast((section) => section.getBoundingClientRect().top <= threshold) || sections[0];
   for (const link of links) {
     if (link.hash === `#${current?.id}`) link.setAttribute('aria-current', 'location');
@@ -70,6 +74,8 @@ function scheduleActiveSection() {
 }
 window.addEventListener('scroll', scheduleActiveSection, { passive: true });
 window.addEventListener('resize', scheduleActiveSection);
+window.addEventListener('load', scheduleActiveSection, { once: true });
+if ('ResizeObserver' in window) new ResizeObserver(scheduleActiveSection).observe(document.body);
 updateActiveSection();
 
 for (const avatar of document.querySelectorAll('img[data-fallback]')) {
@@ -88,6 +94,39 @@ for (const avatar of document.querySelectorAll('img[data-fallback]')) {
   if (avatar.complete && !avatar.naturalWidth) fallback();
 }
 
+const copyResetTimers = new WeakMap();
+async function copyCitation(dialog, button, feedback, showFallback = false) {
+  if (button.disabled) return;
+  const label = button.querySelector('[data-copy-label]');
+  clearTimeout(copyResetTimers.get(button));
+  feedback.textContent = '';
+  button.disabled = true;
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(dialog.querySelector('code').textContent);
+    label.textContent = ui.copied;
+    feedback.textContent = ui.copySuccess;
+  } catch {
+    label.textContent = ui.copyFailed;
+    if (showFallback && !dialog.open) dialog.showModal();
+    feedback.textContent = ui.copyFailure;
+    dialog.querySelector('.copy-status').textContent = ui.copyFailure;
+    dialog.querySelector('pre').focus();
+    const range = document.createRange();
+    range.selectNodeContents(dialog.querySelector('code'));
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } finally {
+    button.disabled = false;
+    copyResetTimers.set(button, setTimeout(() => {
+      label.textContent = ui.copyBibtex;
+      // Keep manual-copy instructions visible until the dialog is closed.
+      if (feedback.textContent === ui.copySuccess) feedback.textContent = '';
+    }, 2500));
+  }
+}
+
 for (const button of document.querySelectorAll('[data-citation]')) {
   const dialog = document.getElementById(`citation-${button.dataset.citation}`);
   button.addEventListener('click', () => {
@@ -101,14 +140,12 @@ for (const button of document.querySelectorAll('[data-citation]')) {
       if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
     }
   });
-  dialog.querySelector('.copy-citation').addEventListener('click', async () => {
-    const status = dialog.querySelector('.copy-status');
-    try {
-      await navigator.clipboard.writeText(dialog.querySelector('code').textContent);
-      status.textContent = ui.copySuccess;
-    } catch {
-      status.textContent = ui.copyFailure;
-      dialog.querySelector('pre').focus();
-    }
-  });
+  const copyButton = dialog.querySelector('.copy-citation');
+  copyButton.addEventListener('click', () => copyCitation(dialog, copyButton, dialog.querySelector('.copy-status')));
+}
+
+for (const button of document.querySelectorAll('[data-copy-citation]')) {
+  const dialog = document.getElementById(`citation-${button.dataset.copyCitation}`);
+  const feedback = button.closest('.publication-card').querySelector('.copy-feedback');
+  button.addEventListener('click', () => copyCitation(dialog, button, feedback, true));
 }

@@ -11,8 +11,9 @@
 | R3S 论文标题、作者顺序、年份、期刊、卷页与 DOI | 用户于 2026-10-21 提供的正式引用；https://ieeexplore.ieee.org/document/11660765 和 https://doi.org/10.1109/TIFS.2026.3725546 | 保留作者缩写，不擅自展开。IEEE 页面返回验证页，未声称独立读取全文。简介仅依据标题与用户提供的关键词，不补写实验结论 |
 | APTBert 论文标题、作者顺序、年份、会议、系列卷号与 DOI | 用户于 2026-10-21 提供的 Springer 引用；https://link.springer.com/chapter/10.1007/978-3-031-56583-0_14 | 会议为 ICDF2C 2023，出版年为 2024；保留作者缩写。简介只描述标题明确的摘要生成与事件抽取任务，不推断技术细节 |
 | ORCID | 用户于 2026-10-21 明确提供 https://orcid.org/0000-0002-5871-946X | 作为外部身份链接与结构化数据 sameAs，不推断额外的履历或姓名 |
+| 四段 Education 时间、学校、学院、学习阶段 | 用户于 2026-10-21 提供的“第一阶段精修”指南 | 四段记录分别保存在 `src/data/education.mjs`，不合并、不补充专业、导师或学位授予信息。英文学院名称采用指南中的表达；尝试访问 `en.scu.edu.cn`、`qgxy.scu.edu.cn` 返回 HTTP 403，因此未将其标为独立核实的官方译名 |
 | Tor Traffic Capture | https://github.com/GSTovey/Tor-traffic-capture/blob/main/Readme.md | 描述 Docker、浏览器自动访问、tcpdump、PCAP 和日志流程；未运行抓包工具或接触实验数据 |
 | Traffic Classification Paper Wiki | https://github.com/GSTovey/Traffic-Classification-Paper-LLM-Wiki/blob/main/README.md | 描述 Obsidian 文献知识库、概念与方法；不把知识库中的他人论文当作个人发表成果，不展示容易过期的统计数字 |
 | 设计参考 | https://github.com/ZYYO666/homepage | 阅读轻量原生方案说明；没有复用其代码、资源、布局或后台 |
 
-没有确认 Scholar 主页，因此不展示。没有足够的独立新闻或带日期履历，因此两个列表保持为空，页面自动隐藏它们。中文介绍依据同样的公开事实翻译；不把译文当成出版社的官方论文标题。新增论文时应再次核查作者顺序、来源和状态；计划投稿不能标为已发表。
+没有确认 Scholar 主页，因此不展示。没有足够的独立新闻或其他研究履历，因此对应可选列表保持为空；Education 单独使用用户提供的四段学习经历。中文介绍依据同样的公开事实翻译；不把译文当成出版社的官方论文标题。新增论文时应再次核查作者顺序、来源和状态；计划投稿不能标为已发表。
