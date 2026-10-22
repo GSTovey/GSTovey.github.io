@@ -98,15 +98,12 @@ h1 > span { color: var(--purple-deep); }
 .section { padding-block: 28px; }
 .research-section { padding-block: 18px 22px; }
 .section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 16px; }
-.section-number { display: inline-block; color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0; margin-right: 12px; vertical-align: middle; font-variant-numeric: tabular-nums; }
 .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.9px; color: var(--purple-deep); margin-bottom: 11px; }
 .eyebrow > span { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--muted); margin-right: 9px; letter-spacing: 0; }
 .section-intro { font-size: 16px; color: var(--muted); margin-top: 10px; }
-.interests-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px 24px; }
-.interest { min-width: 0; display: flex; align-items: center; gap: 10px; }
-.interest-icon { color: var(--purple-deep); display: flex; }
-.interest-icon .icon { width: 18px; height: 18px; }
-.interest h3 { font-size: 16px; font-weight: 550; letter-spacing: -.2px; }
+.interests-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px 24px; list-style: none; margin: 0; padding: 0; }
+.interest { min-width: 0; display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 550; letter-spacing: -.2px; }
+.interest-marker { width: 6px; height: 6px; flex: 0 0 auto; background: var(--purple); }
 .external-arrow, .direction-arrow { transition: transform var(--motion-duration) ease; }
 @media (hover: hover) and (pointer: fine) {
   a:hover .external-arrow, button:hover .external-arrow { transform: translate(2px, -2px); }

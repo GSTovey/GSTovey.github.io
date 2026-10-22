@@ -12,6 +12,7 @@ Read README.md, docs/MAINTENANCE.md, and docs/content-sources.md before editing.
 - Empty optional collections remain hidden. Do not duplicate research project cards in Open Source. Keep ORCID and email exactly as the owner supplied them.
 - Fonts are local: Manrope (SIL OFL) for Latin characters, system Chinese sans-serif fallbacks. Keep body copy at 16px or larger, including narrow screens; metadata may be smaller. Preserve reduced-motion support and keyboard focus.
 - Preserve the flat academic layout, concise bilingual copy, and subtle static background. Publications display bibliographic details and actions; extended summaries/tags remain in data. Render education newest first without changing its source records.
+- Home uses affiliation and research keywords without a degree label or a first-person research sentence. Section headings have no numbering; Research Interests uses small square bullets.
 
 ## Validation
 

@@ -17,7 +17,7 @@ export function safeUrl(value) {
 function helpers(ui) {
   return {
     external: (href, label, glyph = 'arrow', className = '') => safeUrl(href) ? `<a class="${e(className)}" href="${e(safeUrl(href))}" target="_blank" rel="noopener noreferrer">${icon(glyph, glyph === 'arrow' ? 'external-arrow' : '')}<span>${e(label)}</span><span class="sr-only">${e(ui.newTab)}</span></a>` : '',
-    heading: (id, number, eyebrow, title, description, aside = '') => `<div class="section-heading"><div><h2 id="${id}"><span class="section-number" aria-hidden="true">${number}</span>${e(title)}</h2>${description ? `<p class="section-intro">${e(description)}</p>` : ''}</div>${aside}</div>`,
+    heading: (id, title, description = '', aside = '') => `<div class="section-heading"><div><h2 id="${id}">${e(title)}</h2>${description ? `<p class="section-intro">${e(description)}</p>` : ''}</div>${aside}</div>`,
   };
 }
 
@@ -132,17 +132,17 @@ export function renderPage(content, { locale = 'en' } = {}) {
       </aside>
     </section>
 
-    ${research.length ? `<section class="section research-section" id="research" aria-labelledby="research-title"><div class="container">${heading('research-title', '01', ui.researchEyebrow, ui.researchTitle, '')}<div class="interests-grid">${research.map((item) => `<article class="interest"><span class="interest-icon">${icon(item.icon)}</span><h3>${e(item.title)}</h3></article>`).join('')}</div></div></section>` : ''}
+    ${research.length ? `<section class="section research-section" id="research" aria-labelledby="research-title"><div class="container">${heading('research-title', ui.researchTitle)}<ul class="interests-grid" role="list">${research.map((item) => `<li class="interest"><span class="interest-marker" aria-hidden="true"></span><span>${e(item.title)}</span></li>`).join('')}</ul></div></section>` : ''}
 
-    ${publications.length ? `<section class="section container" id="publications" aria-labelledby="publications-title">${heading('publications-title', '02', ui.publicationsEyebrow, ui.publicationsTitle, ui.publicationsIntro)}<div class="publications-list">${publications.map((p, i) => publicationCard(p, i, ui)).join('')}</div></section>` : ''}
+    ${publications.length ? `<section class="section container" id="publications" aria-labelledby="publications-title">${heading('publications-title', ui.publicationsTitle, ui.publicationsIntro)}<div class="publications-list">${publications.map((p, i) => publicationCard(p, i, ui)).join('')}</div></section>` : ''}
 
-    ${projects.length ? `<section class="section container projects-section" id="projects" aria-labelledby="projects-title">${heading('projects-title', '03', ui.projectsEyebrow, ui.projectsTitle, ui.projectsIntro)}<div class="projects-grid">${projects.map((p) => projectCard(p, ui)).join('')}</div></section>` : ''}
+    ${projects.length ? `<section class="section container projects-section" id="projects" aria-labelledby="projects-title">${heading('projects-title', ui.projectsTitle, ui.projectsIntro)}<div class="projects-grid">${projects.map((p) => projectCard(p, ui)).join('')}</div></section>` : ''}
 
-    ${education.length ? `<section class="section container education-section" id="education" aria-labelledby="education-title">${heading('education-title', '04', ui.educationEyebrow, ui.educationTitle, '')}${educationTimeline(education, ui)}</section>` : ''}
+    ${education.length ? `<section class="section container education-section" id="education" aria-labelledby="education-title">${heading('education-title', ui.educationTitle)}${educationTimeline(education, ui)}</section>` : ''}
 
-    ${openSource.length ? `<section class="section container open-source-section" id="open-source" aria-labelledby="open-source-title">${heading('open-source-title', education.length ? '05' : '04', ui.openSourceEyebrow, ui.openSourceTitle, ui.openSourceIntro, external(site.repositories || site.github, ui.allRepositories, 'arrow', 'section-link'))}<div class="resource-list">${openSource.map((resource) => `<article class="resource-card"><span class="icon-box">${icon(resource.icon)}</span><div class="resource-content"><h3>${e(resource.title)}</h3>${text(resource.description) ? `<p>${e(resource.description)}</p>` : ''}<div class="card-actions">${external(resource.repository, ui.repository, 'github')}${external(resource.documentation, ui.gettingStarted, 'book')}</div></div></article>`).join('')}</div></section>` : ''}
+    ${openSource.length ? `<section class="section container open-source-section" id="open-source" aria-labelledby="open-source-title">${heading('open-source-title', ui.openSourceTitle, ui.openSourceIntro, external(site.repositories || site.github, ui.allRepositories, 'arrow', 'section-link'))}<div class="resource-list">${openSource.map((resource) => `<article class="resource-card"><span class="icon-box">${icon(resource.icon)}</span><div class="resource-content"><h3>${e(resource.title)}</h3>${text(resource.description) ? `<p>${e(resource.description)}</p>` : ''}<div class="card-actions">${external(resource.repository, ui.repository, 'github')}${external(resource.documentation, ui.gettingStarted, 'book')}</div></div></article>`).join('')}</div></section>` : ''}
 
-    ${news.length ? `<section class="section container" id="news" aria-labelledby="news-title">${heading('news-title', education.length ? '06' : '05', ui.newsEyebrow, ui.newsTitle, '')}<ul class="timeline">${news.map((item) => `<li><time datetime="${e(item.date)}">${e(item.date)}</time><div><h3>${e(item.title)}</h3>${text(item.description) ? `<p>${e(item.description)}</p>` : ''}${external(item.url, ui.readMore)}</div></li>`).join('')}</ul></section>` : ''}
+    ${news.length ? `<section class="section container" id="news" aria-labelledby="news-title">${heading('news-title', ui.newsTitle)}<ul class="timeline">${news.map((item) => `<li><time datetime="${e(item.date)}">${e(item.date)}</time><div><h3>${e(item.title)}</h3>${text(item.description) ? `<p>${e(item.description)}</p>` : ''}${external(item.url, ui.readMore)}</div></li>`).join('')}</ul></section>` : ''}
 
     ${experience.length ? `<section class="section container" id="experience" aria-labelledby="experience-title"><h2 id="experience-title">${e(ui.experienceTitle)}</h2><ul class="timeline">${experience.map((item) => `<li><span>${e(item.period)}</span><div><h3>${e(item.title)}</h3>${text(item.institution) ? `<p>${e(item.institution)}</p>` : ''}${text(item.description) ? `<p>${e(item.description)}</p>` : ''}</div></li>`).join('')}</ul></section>` : ''}
 
