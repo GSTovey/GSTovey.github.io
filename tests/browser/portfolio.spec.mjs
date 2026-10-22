@@ -20,12 +20,22 @@ for (const locale of ['en', 'zh']) for (const width of [1440, 1024, 768, 390, 32
     await expect(page.locator('.resource-card')).toHaveCount(1);
     await expect(page.locator('.education-item')).toHaveCount(4);
     await expect(page.locator('.copy-bibtex-button')).toHaveCount(3);
-    await expect(page.locator('.profile-traces')).toHaveAttribute('aria-hidden', 'true');
+    const background = page.locator('.ambient-background');
+    await expect(background).toHaveAttribute('aria-hidden', 'true');
+    expect(await background.evaluate((node) => getComputedStyle(node).pointerEvents)).toBe('none');
+    expect(await background.evaluate((node) => Number(getComputedStyle(node).opacity))).toBeLessThanOrEqual(.12);
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).not.toBe('rgb(255, 255, 255)');
+    const flatSections = await page.locator('.publication-card, .project-card, .resource-card, .education-timeline, .contact-card, .profile-card').evaluateAll((nodes) => nodes.every((node) => {
+      const style = getComputedStyle(node);
+      return style.borderRadius === '0px' && style.borderLeftWidth === '0px' && style.backgroundColor === 'rgba(0, 0, 0, 0)';
+    }));
+    expect(flatSections).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(result.violations).toEqual([]);
     expect(errors).toEqual([]);
-    expect(await page.locator('.publication-summary').first().evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
+    await expect(page.locator('.publication-summary, .tags, .project-flow')).toHaveCount(0);
+    expect(await page.locator('.project-card > p').first().evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
     await page.screenshot({ path: `test-results/portfolio-${locale}-${width}.png`, fullPage: true });
   });
 }
@@ -224,7 +234,7 @@ for (const locale of ['en', 'zh']) {
     await expect(page.locator('#education')).toBeFocused();
     expect((await page.locator('#education').boundingBox()).y).toBeGreaterThanOrEqual(68);
     const periods = page.locator('.education-period');
-    for (const [index, item] of education.entries()) await expect(periods.nth(index)).toHaveText(`${item.start}–${item.end || ui.present}`);
+    for (const [index, item] of education.toReversed().entries()) await expect(periods.nth(index)).toHaveText(`${item.start}–${item.end || ui.present}`);
     await page.getByRole('link', { name: ui.switchLabel }).click();
     await expect(page).toHaveURL(/#education$/);
     await expect(page.locator('.education-item')).toHaveCount(4);
@@ -313,7 +323,8 @@ test('static card bodies stay still, real links give feedback, and keyboard focu
   expect(await card.evaluate((node) => getComputedStyle(node).transform)).toBe('none');
   const link = card.locator('.card-actions a').first();
   await link.hover();
-  await expect.poll(() => card.evaluate((node) => getComputedStyle(node).borderTopColor)).toBe('rgb(147, 91, 237)');
+  await expect.poll(() => link.evaluate((node) => getComputedStyle(node).textDecorationLine)).toBe('underline');
+  expect(await card.evaluate((node) => getComputedStyle(node).borderLeftWidth)).toBe('0px');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const arrowLink = page.locator('.publication-content h3 a').first();
   await arrowLink.hover();

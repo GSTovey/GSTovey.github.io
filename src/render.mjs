@@ -17,23 +17,20 @@ export function safeUrl(value) {
 function helpers(ui) {
   return {
     external: (href, label, glyph = 'arrow', className = '') => safeUrl(href) ? `<a class="${e(className)}" href="${e(safeUrl(href))}" target="_blank" rel="noopener noreferrer">${icon(glyph, glyph === 'arrow' ? 'external-arrow' : '')}<span>${e(label)}</span><span class="sr-only">${e(ui.newTab)}</span></a>` : '',
-    tags: (list) => strings(list).length ? `<ul class="tags" aria-label="${e(ui.topics)}">${strings(list).map((tag) => `<li>${e(tag)}</li>`).join('')}</ul>` : '',
-    heading: (id, number, eyebrow, title, description, aside = '') => `<div class="section-heading"><div><p class="eyebrow"><span>${number}</span> ${e(eyebrow)}</p><h2 id="${id}">${e(title)}</h2>${description ? `<p class="section-intro">${e(description)}</p>` : ''}</div>${aside}</div>`,
+    heading: (id, number, eyebrow, title, description, aside = '') => `<div class="section-heading"><div><h2 id="${id}"><span class="section-number" aria-hidden="true">${number}</span>${e(title)}</h2>${description ? `<p class="section-intro">${e(description)}</p>` : ''}</div>${aside}</div>`,
   };
 }
 
 export function publicationCard(p, index, ui = getMessages()) {
-  const { external, tags } = helpers(ui);
+  const { external } = helpers(ui);
   const paper = safeUrl(p.paperUrl);
   return `<article class="publication-card">
-    <div class="publication-year">${p.year ? `<span>${e(p.year)}</span>` : icon('file')}<span class="publication-index">${String(index + 1).padStart(2, '0')}</span></div>
+    <div class="publication-year"><span class="publication-index">[${index + 1}]</span></div>
     <div class="publication-content">
-      ${text(p.venue) ? `<p class="venue">${e(p.venue)}</p>` : ''}
-      ${Object.hasOwn(ui.statuses, p.status) ? `<p class="status">${e(ui.statuses[p.status])}</p>` : ''}
       <h3${p.language === 'en' ? ' lang="en"' : ''}>${paper ? `<a href="${e(paper)}" target="_blank" rel="noopener noreferrer">${e(p.title)}${icon('arrow', 'external-arrow')}<span class="sr-only">${e(ui.newTab)}</span></a>` : e(p.title)}</h3>
       ${strings(p.authors).length ? `<p class="authors">${strings(p.authors).map(e).join(', ')}</p>` : ''}
-      ${text(p.summary) ? `<p class="publication-summary">${e(p.summary)}</p>` : ''}
-      ${tags(p.tags)}
+      ${text(p.venue) || p.year ? `<p class="venue">${[text(p.venue) ? e(p.venue) : '', p.year ? e(p.year) : ''].filter(Boolean).join(' · ')}</p>` : ''}
+      ${Object.hasOwn(ui.statuses, p.status) ? `<p class="status">${e(ui.statuses[p.status])}</p>` : ''}
       <div class="card-actions">
         ${external(paper, ui.paper, 'file')}${external(p.codeUrl, ui.code, 'code')}${external(p.projectUrl, ui.project, 'arrow')}
         ${text(p.bibtex) ? `<button class="text-button cite-button" type="button" data-citation="${index}" aria-haspopup="dialog">${icon('quote')}<span>${e(ui.cite)}<span class="sr-only"> ${e(p.title)}</span></span></button>` : ''}
@@ -44,13 +41,10 @@ export function publicationCard(p, index, ui = getMessages()) {
 }
 
 export function projectCard(project, ui = getMessages()) {
-  const { external, tags } = helpers(ui);
+  const { external } = helpers(ui);
   return `<article class="project-card">
-    <div class="project-top"><span class="icon-box">${icon(project.icon)}</span>${text(project.eyebrow) ? `<span class="project-type">${e(project.eyebrow)}</span>` : ''}</div>
-    <h3>${e(project.title)}</h3>
+    <h3>${icon(project.icon)}${e(project.title)}</h3>
     ${text(project.description) ? `<p>${e(project.description)}</p>` : ''}
-    ${strings(project.steps).length ? `<ol class="project-flow" aria-label="${e(ui.workflow)}">${strings(project.steps).map((step) => `<li>${e(step)}</li>`).join('')}</ol>` : ''}
-    ${tags(project.tags)}
     <div class="card-actions">${external(project.repository, ui.repository, 'github')}${external(project.documentation, ui.readme, 'book')}${external(project.demo, ui.demo, 'arrow')}</div>
   </article>`;
 }
@@ -62,12 +56,12 @@ function educationTimeline(items, ui) {
 
 export function renderPage(content, { locale = 'en' } = {}) {
   const ui = getMessages(locale);
-  const { external, tags, heading } = helpers(ui);
+  const { external, heading } = helpers(ui);
   const localized = localizeContent(content, locale);
   const { site } = localized;
   const publications = entries(localized.publications);
   const projects = entries(localized.projects);
-  const education = localized.education.filter((item) => item && text(item.institution) && text(item.school) && /^\d{4}\.\d{2}$/.test(item.start || '') && (item.end ? /^\d{4}\.\d{2}$/.test(item.end) : item.current === true));
+  const education = localized.education.filter((item) => item && text(item.institution) && text(item.school) && /^\d{4}\.\d{2}$/.test(item.start || '') && (item.end ? /^\d{4}\.\d{2}$/.test(item.end) : item.current === true)).sort((a, b) => b.start.localeCompare(a.start));
   const openSource = entries(localized.openSource);
   const news = entries(localized.news).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.date || ''));
   const experience = entries(localized.experience);
@@ -112,6 +106,7 @@ export function renderPage(content, { locale = 'en' } = {}) {
   <script type="module" src="/assets/main.js"></script>
 </head>
 <body>
+  <svg class="ambient-background" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false" fill="none"><g stroke="currentColor" stroke-width="1.2"><path d="M-60 280H25l12-12 14 28 13-40 14 47 13-25h86c65 0 78 64 142 64h105M1090 790h60l12-20 15 39 14-53 16 61 14-27h175M1118 98l120 64 130-61M1238 162l-30 124 156 62M-35 760l112-55 84 112 131-35M77 705l25-111"/><circle cx="1238" cy="162" r="5"/><circle cx="1208" cy="286" r="4"/><circle cx="1364" cy="348" r="5"/><circle cx="77" cy="705" r="4"/><circle cx="161" cy="817" r="5"/><circle cx="102" cy="594" r="3"/></g></svg>
   <a class="skip-link" href="#main">${e(ui.skip)}</a>
   <div class="scroll-progress" aria-hidden="true"><span></span></div>
   <header class="site-header">
@@ -132,17 +127,12 @@ export function renderPage(content, { locale = 'en' } = {}) {
         ${orcid ? `<div class="hero-socials">${external(orcid, `ORCID · ${orcidLabel}`, 'arrow')}</div>` : ''}
       </div>
       <aside class="profile-card" aria-label="${e(ui.profile)}">
-        <div class="profile-card-top"><span>${e(ui.profileKicker)}</span><span class="profile-dots" aria-hidden="true">● ● ●</span></div>
-        <svg class="profile-traces" viewBox="0 0 292 210" aria-hidden="true" focusable="false" fill="none"><g stroke="currentColor" stroke-width="1"><path d="M-8 65h46l20 20h15M219 43h17l19-19h45M-8 172h48l28-28h7M219 151h17l22 22h42"/><circle cx="38" cy="65" r="3"/><circle cx="236" cy="43" r="3"/><circle cx="40" cy="172" r="3"/><circle cx="258" cy="173" r="3"/></g></svg>
         <div class="avatar-wrap"><span class="avatar-monogram" aria-hidden="true">${e(site.name.charAt(0))}</span>${avatar ? `<img class="avatar" src="${e(avatar)}" data-fallback="${e(safeUrl(site.avatarFallback))}" width="140" height="140" alt="${e(site.name)}${e(ui.avatarAlt)}" decoding="async">` : ''}</div>
-        <p class="profile-name">${e(site.name)} <span>/ ${e(site.handle)}</span></p>
-        <p class="profile-role">${e(site.role)} · ${e(site.lab)}</p>
-        <div class="profile-affiliation">${icon('school')}<span>${e(site.institution)}</span></div>
-        <div class="profile-card-bottom"><span>${e(ui.profileFooter)}</span>${icon('code')}</div>
+        <p class="profile-handle">@${e(site.handle)}</p>
       </aside>
     </section>
 
-    ${research.length ? `<section class="section research-section" id="research" aria-labelledby="research-title"><div class="container">${heading('research-title', '01', ui.researchEyebrow, ui.researchTitle, '')}<div class="interests-grid">${research.map((item) => `<article class="interest"><span class="interest-icon">${icon(item.icon)}</span><h3>${e(item.title)}</h3>${text(item.description) ? `<p>${e(item.description)}</p>` : ''}</article>`).join('')}</div></div></section>` : ''}
+    ${research.length ? `<section class="section research-section" id="research" aria-labelledby="research-title"><div class="container">${heading('research-title', '01', ui.researchEyebrow, ui.researchTitle, '')}<div class="interests-grid">${research.map((item) => `<article class="interest"><span class="interest-icon">${icon(item.icon)}</span><h3>${e(item.title)}</h3></article>`).join('')}</div></div></section>` : ''}
 
     ${publications.length ? `<section class="section container" id="publications" aria-labelledby="publications-title">${heading('publications-title', '02', ui.publicationsEyebrow, ui.publicationsTitle, ui.publicationsIntro)}<div class="publications-list">${publications.map((p, i) => publicationCard(p, i, ui)).join('')}</div></section>` : ''}
 
@@ -150,13 +140,13 @@ export function renderPage(content, { locale = 'en' } = {}) {
 
     ${education.length ? `<section class="section container education-section" id="education" aria-labelledby="education-title">${heading('education-title', '04', ui.educationEyebrow, ui.educationTitle, '')}${educationTimeline(education, ui)}</section>` : ''}
 
-    ${openSource.length ? `<section class="section container open-source-section" id="open-source" aria-labelledby="open-source-title">${heading('open-source-title', education.length ? '05' : '04', ui.openSourceEyebrow, ui.openSourceTitle, ui.openSourceIntro, external(site.repositories || site.github, ui.allRepositories, 'arrow', 'section-link'))}<div class="resource-list">${openSource.map((resource) => `<article class="resource-card"><span class="icon-box">${icon(resource.icon)}</span><div class="resource-content"><h3>${e(resource.title)}</h3>${text(resource.description) ? `<p>${e(resource.description)}</p>` : ''}${tags(resource.tags)}<div class="card-actions">${external(resource.repository, ui.repository, 'github')}${external(resource.documentation, ui.gettingStarted, 'book')}</div></div></article>`).join('')}</div></section>` : ''}
+    ${openSource.length ? `<section class="section container open-source-section" id="open-source" aria-labelledby="open-source-title">${heading('open-source-title', education.length ? '05' : '04', ui.openSourceEyebrow, ui.openSourceTitle, ui.openSourceIntro, external(site.repositories || site.github, ui.allRepositories, 'arrow', 'section-link'))}<div class="resource-list">${openSource.map((resource) => `<article class="resource-card"><span class="icon-box">${icon(resource.icon)}</span><div class="resource-content"><h3>${e(resource.title)}</h3>${text(resource.description) ? `<p>${e(resource.description)}</p>` : ''}<div class="card-actions">${external(resource.repository, ui.repository, 'github')}${external(resource.documentation, ui.gettingStarted, 'book')}</div></div></article>`).join('')}</div></section>` : ''}
 
     ${news.length ? `<section class="section container" id="news" aria-labelledby="news-title">${heading('news-title', education.length ? '06' : '05', ui.newsEyebrow, ui.newsTitle, '')}<ul class="timeline">${news.map((item) => `<li><time datetime="${e(item.date)}">${e(item.date)}</time><div><h3>${e(item.title)}</h3>${text(item.description) ? `<p>${e(item.description)}</p>` : ''}${external(item.url, ui.readMore)}</div></li>`).join('')}</ul></section>` : ''}
 
     ${experience.length ? `<section class="section container" id="experience" aria-labelledby="experience-title"><h2 id="experience-title">${e(ui.experienceTitle)}</h2><ul class="timeline">${experience.map((item) => `<li><span>${e(item.period)}</span><div><h3>${e(item.title)}</h3>${text(item.institution) ? `<p>${e(item.institution)}</p>` : ''}${text(item.description) ? `<p>${e(item.description)}</p>` : ''}</div></li>`).join('')}</ul></section>` : ''}
 
-    <section class="contact-section container" id="contact" aria-labelledby="contact-title"><div class="contact-card"><div><p class="eyebrow">${e(ui.contactEyebrow)}</p><h2 id="contact-title">${e(ui.contactTitle)}</h2><p>${e(site.contactText)}</p></div>${email ? `<a class="button button-primary" href="mailto:${e(email)}">${icon('mail')} ${e(ui.getInTouch)} ${icon('arrow')}</a><a class="contact-email" href="mailto:${e(email)}">${e(email)}</a>` : external(site.github, ui.findOnGithub, 'github', 'button button-primary')}</div></section>
+    <section class="contact-section container" id="contact" aria-labelledby="contact-title"><div class="contact-card"><div><h2 id="contact-title">${e(ui.contactTitle)}</h2><p>${e(site.contactText)}</p></div>${email ? `<a class="button button-primary" href="mailto:${e(email)}">${icon('mail')} ${e(ui.getInTouch)} ${icon('arrow')}</a><a class="contact-email" href="mailto:${e(email)}">${e(email)}</a>` : external(site.github, ui.findOnGithub, 'github', 'button button-primary')}</div></section>
   </main>
   <footer class="container site-footer"><p><span class="footer-brand">${e(site.name.toLowerCase())}<span>.</span></span><span>© ${new Date().getUTCFullYear()} ${e(site.name)}</span></p><div>${external(site.github, 'GitHub', 'github')}<a class="back-top" href="#home">${e(ui.backTop)} ${icon('up')}</a></div></footer>
   ${citationDialogs}

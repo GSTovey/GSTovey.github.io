@@ -9,8 +9,8 @@ export const site = {
   lab: 'iTA-Lab',
   school: 'School of Cyber Science and Engineering',
   institution: 'Sichuan University',
-  headline: 'Understanding what encrypted traffic reveals.',
-  bio: 'I’m a Ph.D. student at iTA-Lab, School of Cyber Science and Engineering, Sichuan University. My research focuses on network security, encrypted traffic analysis, and traffic classification. I also work on cyber threat intelligence and security knowledge graphs.',
+  headline: 'Ph.D. student · iTA-Lab · Sichuan University',
+  bio: 'I study encrypted traffic analysis and cyber threat intelligence.',
   // Prefer a local avatar. The remote image is a verified GitHub profile URL,
   // with a text fallback if neither resource can be loaded.
   avatar: '/assets/avatar.jpg',
@@ -19,7 +19,7 @@ export const site = {
   repositories: 'https://github.com/GSTovey?tab=repositories',
   email: 'tovey_zhou@foxmail.com',
   orcid: 'https://orcid.org/0000-0002-5871-946X',
-  contactText: 'I’m always happy to connect with researchers, developers, and anyone interested in exchanging ideas, discussing research or technology, exploring collaborations, or simply having a conversation.',
+  contactText: 'Open to conversations, ideas, and collaboration.',
   translations: {
     zh: {
       title: 'Tovey — 网络安全研究',
@@ -27,9 +27,9 @@ export const site = {
       role: '博士研究生',
       school: '网络空间安全学院',
       institution: '四川大学',
-      headline: '理解加密流量中可观测的网络行为。',
-      bio: '我目前在四川大学网络空间安全学院 iTA-Lab 攻读博士，主要关注网络安全、加密流量分析与网络流量分类，也开展网络威胁情报与安全知识图谱相关研究。',
-      contactText: '欢迎就学术研究、技术讨论、项目合作、开源工作或其他感兴趣的话题与我交流。无论是分享想法、探讨问题，还是建立新的联系，都欢迎通过以下方式联系我。',
+      headline: '四川大学 · iTA-Lab · 博士研究生',
+      bio: '研究加密流量分析与网络威胁情报。',
+      contactText: '欢迎交流、讨论与合作。',
     },
   },
 };

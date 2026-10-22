@@ -11,6 +11,7 @@ Read README.md, docs/MAINTENANCE.md, and docs/content-sources.md before editing.
 - Preserve original publication titles, verified author order, DOI, year, venue, and BibTeX across languages. Never expand author initials without a source. ICDF2C 2023's APTBert chapter has publication year 2024. Do not invent methods, results, publication status, or links. Record new sources in `docs/content-sources.md`.
 - Empty optional collections remain hidden. Do not duplicate research project cards in Open Source. Keep ORCID and email exactly as the owner supplied them.
 - Fonts are local: Manrope (SIL OFL) for Latin characters, system Chinese sans-serif fallbacks. Keep body copy at 16px or larger, including narrow screens; metadata may be smaller. Preserve reduced-motion support and keyboard focus.
+- Preserve the flat academic layout, concise bilingual copy, and subtle static background. Publications display bibliographic details and actions; extended summaries/tags remain in data. Render education newest first without changing its source records.
 
 ## Validation
 

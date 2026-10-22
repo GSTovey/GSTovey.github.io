@@ -68,7 +68,7 @@ test('GitHub Pages workflow deploys the built root-domain site', async () => {
 test('Chinese output translates content, controls and SEO while preserving original citations', () => {
   const html = renderPage(content, { locale: 'zh' });
   assert.ok(html.includes('<html lang="zh-Hans">'));
-  for (const phrase of ['网络安全研究', '研究方向', '聚焦研究问题。', '四川大学', '关闭引用', '复制 BibTeX', '展开导航', '返回顶部']) assert.ok(html.includes(phrase), phrase);
+  for (const phrase of ['网络安全研究', '研究方向', '代表论文', '四川大学', '关闭引用', '复制 BibTeX', '展开导航', '返回顶部']) assert.ok(html.includes(phrase), phrase);
   assert.ok(html.includes('rel="canonical" href="https://gstovey.github.io/zh/"'));
   assert.ok(html.includes('hreflang="en"'));
   assert.ok(html.includes('hreflang="zh-Hans"'));
@@ -102,7 +102,7 @@ test('localization falls back for optional translations without mutating shared 
   assert.equal(JSON.stringify(content), before);
 });
 
-test('Education preserves four separate study periods, schools and stages in both languages', () => {
+test('Education renders newest first while preserving four separate study periods, schools and stages', () => {
   assert.deepEqual(education.map((entry) => [entry.start, entry.end]), [
     ['2019.09', '2020.06'], ['2020.09', '2024.06'], ['2024.09', '2026.06'], ['2026.09', null],
   ]);
@@ -119,6 +119,27 @@ test('Education preserves four separate study periods, schools and stages in bot
     assert.ok(html.includes('href="#education"'));
     assert.ok(html.includes('datetime="2019-09"'));
     assert.ok(html.includes(locale === 'zh' ? '至今' : 'Present'));
+    const starts = [...html.matchAll(/class="education-period"><time datetime="[^"]+">([^<]+)<\/time>/g)].map((match) => match[1]);
+    assert.deepEqual(starts, ['2026.09', '2024.09', '2020.09', '2019.09']);
+  }
+});
+
+test('compact publication lists retain bibliographic details and controls without summaries or tags', () => {
+  for (const locale of ['en', 'zh']) {
+    const localized = localizeContent(content, locale);
+    const html = renderPage(content, { locale });
+    assert.ok(!html.includes('class="publication-summary"'));
+    assert.ok(!html.includes('class="tags"'));
+    assert.ok(!html.includes('class="project-flow"'));
+    for (const [index, paper] of localized.publications.entries()) {
+      const item = publicationCard(paper, index, getMessages(locale));
+      assert.ok(item.includes(escapeHtml(paper.title)));
+      assert.ok(item.includes(paper.authors.map(escapeHtml).join(', ')));
+      assert.ok(item.includes(`${escapeHtml(paper.venue)} · ${paper.year}`));
+      assert.ok(item.includes(escapeHtml(paper.paperUrl)));
+      assert.ok(item.includes(`data-copy-citation="${index}"`));
+      assert.ok(!item.includes(escapeHtml(paper.summary)));
+    }
   }
 });
 
@@ -140,7 +161,7 @@ test('Contact stays open to general discussion and the progress decoration is hi
     assert.ok(!localized.site.contactText.includes('NESTTOR'));
     const html = renderPage(content, { locale });
     assert.ok(html.includes('class="scroll-progress" aria-hidden="true"'));
-    assert.ok(html.includes('class="profile-traces"'));
+    assert.ok(html.includes('class="ambient-background"'));
     assert.ok(html.includes(`mailto:${site.email}`));
     assert.ok(html.includes(site.orcid));
     assert.ok(html.includes(locale === 'zh' ? '欢迎交流' : 'Let’s Connect'));
