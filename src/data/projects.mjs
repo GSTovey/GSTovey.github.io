@@ -30,6 +30,16 @@ export const projects = [
     } },
   },
   {
+    title: 'Tor-Crawl',
+    description: 'A TorCrawl.py extension for multi-protocol traffic datasets, with Tor-over-Proxy and paired captures.',
+    icon: 'activity',
+    repository: 'https://github.com/GSTovey/Tor-Crawl',
+    documentation: 'https://github.com/GSTovey/Tor-Crawl#readme',
+    translations: { zh: {
+      description: '扩展 TorCrawl.py，支持多协议代理、Tor-over-Proxy 与双视角流量采集。',
+    } },
+  },
+  {
     title: 'Tor Traffic Capture',
     eyebrow: 'Research tooling',
     description: 'Docker-based automation for collecting Tor and clearnet traffic as PCAP files and logs.',

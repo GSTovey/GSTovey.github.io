@@ -1,6 +1,6 @@
 # 内容来源与核实边界
 
-核对日期：2026-10-21。网站使用静态内容，不在浏览时抓取 GitHub。
+初次核对：2026-10-21；Tor-Crawl 补充核对：2026-10-28。网站使用静态内容，不在浏览时抓取 GitHub。
 
 | 内容 | 公开来源 | 使用范围 |
 | --- | --- | --- |
@@ -13,6 +13,7 @@
 | ORCID | 用户于 2026-10-21 明确提供 https://orcid.org/0000-0002-5871-946X | 作为外部身份链接与结构化数据 sameAs，不推断额外的履历或姓名 |
 | 四段 Education 时间、学校、学院、学习阶段 | 用户于 2026-10-21 提供的“第一阶段精修”指南 | 四段记录分别保存在 `src/data/education.mjs`，不合并、不补充专业、导师或学位授予信息。英文学院名称采用指南中的表达；尝试访问 `en.scu.edu.cn`、`qgxy.scu.edu.cn` 返回 HTTP 403，因此未将其标为独立核实的官方译名 |
 | Tor Traffic Capture | https://github.com/GSTovey/Tor-traffic-capture/blob/main/Readme.md | 描述 Docker、浏览器自动访问、tcpdump、PCAP 和日志流程；未运行抓包工具或接触实验数据 |
+| Tor-Crawl | https://github.com/GSTovey/Tor-Crawl/blob/main/README.md；上游 https://github.com/MikeMeliz/TorCrawl.py | 明确为基于 TorCrawl.py 的扩展，描述 README 列出的多协议代理、Tor-over-Proxy 与双视角流量采集，用于数据集构建。仅阅读公开说明，未运行爬虫或抓包流程；不宣称提供已采集的 PCAP 数据 |
 | Traffic Classification Paper Wiki | https://github.com/GSTovey/Traffic-Classification-Paper-LLM-Wiki/blob/main/README.md | 描述 Obsidian 文献知识库、概念与方法；不把知识库中的他人论文当作个人发表成果，不展示容易过期的统计数字 |
 | 设计参考 | https://github.com/ZYYO666/homepage | 阅读轻量原生方案说明；没有复用其代码、资源、布局或后台 |
 

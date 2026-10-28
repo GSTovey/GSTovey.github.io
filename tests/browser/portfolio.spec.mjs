@@ -16,7 +16,7 @@ for (const locale of ['en', 'zh']) for (const width of [1440, 1024, 768, 390, 32
     await page.goto(locale === 'zh' ? '/zh/' : '/');
     await expect(page.locator('h1')).toHaveText(locale === 'zh' ? '你好，我是 Tovey。' : 'Hi, I’m Tovey.');
     await expect(page.locator('.publication-card')).toHaveCount(3);
-    await expect(page.locator('.project-card')).toHaveCount(2);
+    await expect(page.locator('.project-card')).toHaveCount(3);
     await expect(page.locator('.resource-card')).toHaveCount(1);
     await expect(page.locator('.education-item')).toHaveCount(4);
     await expect(page.locator('.copy-bibtex-button')).toHaveCount(3);
